@@ -1,40 +1,39 @@
 # Deployment Guide / 部署说明
 
-Local files only: no domain changes, GitHub push, Cloudflare deployment, or API hosting deployment have been performed. / 本文仅提供本地部署材料；目前未修改域名、未推送 GitHub、未部署 Cloudflare 或 API 主机。
+This guide describes configuration and preflight only. No Cloudflare or API-host deployment is performed. / 本文说明配置和部署前检查，不执行 Cloudflare 或 API 主机部署。
 
 ## Architecture / 架构
 
-Use Cloudflare Pages for the Vite static bundle, a Cloudflare Worker route for `/api/*`, and an independent FastAPI Docker service with a persistent disk. This keeps the tested Python Core and its checkpoint semantics. Do not configure a Python Worker as the API host: its local filesystem is ephemeral per isolate. / 使用 Cloudflare Pages 托管 Vite 静态文件，Cloudflare Worker 代理 `/api/*`，FastAPI Docker 服务运行于独立主机并挂载持久盘。这样可保留已测试 Python Core 和检查点机制。不要将 Python Worker 配成 API 主机，其本地文件系统按隔离实例易失。
+A single Cloudflare Worker serves the Vite Static Assets and forwards `/api/*` to the independent FastAPI Docker service on a persistent disk. The current FastAPI app uses SQLite plus per-task source, checkpoint and result files. Although Python Workers support FastAPI, isolate-local files do not provide the durable storage this app requires. Moving it to Cloudflare storage would require a broader backend redesign, so Python Offer/Reason, validation, Azure Message generation, task status and recovery remain in the existing container. / 单个 Cloudflare Worker 同时托管 Vite 静态资源，并将 `/api/*` 转发至挂载持久盘的独立 FastAPI Docker 服务。当前 FastAPI 使用 SQLite 及逐任务输入、检查点和结果文件。虽然 Python Workers 支持 FastAPI，但隔离实例本地文件无法满足本项目的持久化要求。迁移到 Cloudflare 存储会扩大后端重构，因此 Python Offer/Reason、校验、Azure Message 生成、任务状态和恢复仍在现有容器运行。
 
-## 1. Configure and deploy the API service / 配置并部署 API 服务
+## 1. API host / API 主机
 
-1. Create a new service from this project's independent repository; use `render.yaml` / `Dockerfile`. Pick a host/runtime with a persistent mounted disk. `/var/data` must survive container restarts. / 从本项目独立仓库新建服务，使用 `render.yaml` 或 `Dockerfile`，选择支持持久挂载盘的运行主机；`/var/data` 必须在容器重启后保留。
-2. Set server-only Secrets in the API host: `GROUP_ACCESS_CODE`, `SESSION_SECRET`, `AZURE_OPENAI_API_KEY`. Generate a long random session value, e.g. `python -c "import secrets; print(secrets.token_urlsafe(48))"`. Do not place any of these in Pages variables. / 在 API 主机配置服务端 Secret：`GROUP_ACCESS_CODE`、`SESSION_SECRET`、`AZURE_OPENAI_API_KEY`。会话密钥用随机值生成；这些密钥不得放进 Pages 变量。
-3. Set `PUBLIC_ORIGIN=https://cloudcore.moyee.uk`, `COOKIE_SECURE=true`, and keep `ALLOW_UPLOADED_SYNTHETIC_ANALYSIS=false`. / 设置 `PUBLIC_ORIGIN`、`COOKIE_SECURE=true`，保持上传分析关闭。
-4. Confirm `config.yaml` contains the desired Azure provider, deployment name and batch size before building. Never configure a user-selectable model endpoint. / 构建前确认 `config.yaml` 中的 Azure Provider、部署名和 batch size。不要配置用户可选择的模型 Endpoint。
-5. Confirm `/api/health` returns `{"status":"ok"}`. Do not use real CloudCore data for testing. / 确认 `/api/health` 返回成功；测试不得使用 CloudCore 真实数据。
+1. Create the independent service from `render.yaml` / `Dockerfile` on a host with a persistent disk mounted at `/var/data`. / 使用 `render.yaml` 或 `Dockerfile` 创建独立服务，并将持久盘挂载到 `/var/data`。
+2. Configure server-only Secrets `GROUP_ACCESS_CODE`, `SESSION_SECRET`, and `AZURE_OPENAI_API_KEY`. Set `PUBLIC_ORIGIN=https://cloudcore.moyee.uk`, `COOKIE_SECURE=true`, and `ALLOW_UPLOADED_SYNTHETIC_ANALYSIS=false`. / 在服务端配置 Secret：`GROUP_ACCESS_CODE`、`SESSION_SECRET`、`AZURE_OPENAI_API_KEY`；设置 `PUBLIC_ORIGIN=https://cloudcore.moyee.uk`、`COOKIE_SECURE=true`、`ALLOW_UPLOADED_SYNTHETIC_ANALYSIS=false`。
+3. Keep the persistent disk enabled, then verify `/api/health`. Use synthetic data only. / 确保持久盘已启用，再验证 `/api/health`。仅使用模拟数据。
 
-## 2. Build Cloudflare Pages / 构建 Cloudflare Pages
+## 2. Cloudflare Workers Builds / Cloudflare Workers Builds 设置
 
-Create a Pages project for the independent repository with root directory `web`, build command `npm ci && npm run build`, output directory `dist`. Do not add Azure keys, group access code, or session secrets to the build environment. Attach the custom domain `cloudcore.moyee.uk` in Pages. / 为独立仓库创建 Pages 项目，根目录 `web`，构建命令 `npm ci && npm run build`，输出目录 `dist`。构建环境不得配置 Azure key、访问码或会话 Secret。在 Pages 绑定自定义域 `cloudcore.moyee.uk`。
+For the connected Worker `cloudcore-retention-demo`, set:
 
-## 3. Configure API route proxy / 配置 API 路由代理
+- Root directory: `web`
+- Build command: `npm run build`
+- Deploy command: `npx wrangler deploy` (or `npm run deploy`)
 
-1. Edit `deploy/cloudflare/wrangler.jsonc` and replace `BACKEND_ORIGIN` with the API service origin, without a trailing slash. / 编辑 `deploy/cloudflare/wrangler.jsonc`，将 `BACKEND_ORIGIN` 替换为 API 主机来源，不加末尾斜线。
-2. Verify the route is exactly `cloudcore.moyee.uk/api/*` and zone `moyee.uk`. It must not be widened to `moyee.uk/*` or another hostname. / 核对路由严格为 `cloudcore.moyee.uk/api/*`、zone 为 `moyee.uk`；不可扩展到 `moyee.uk/*` 或其他主机名。
-3. Install/use Wrangler, review the exact config and then deploy from the project root: `npx wrangler deploy --config deploy/cloudflare/wrangler.jsonc`. This step is intentionally left to the project owner. / 安装或使用 Wrangler，审查配置后在项目根目录运行部署命令；此步骤由项目所有者自行执行。
-4. Verify Pages home, `/api/health`, login Cookie attributes, unauthenticated API rejection, and that a page reload does not start an analysis. / 验证 Pages 首页、健康接口、登录 Cookie 属性、未认证接口拒绝，以及刷新页面不会触发模型调用。
+The Vite output is `web/dist`; `web/wrangler.jsonc` declares `./dist` as Static Assets. This is a Workers project, not a Pages project, so do not set a Pages output directory. Replace the Hugo build command with the command above. / Vite 产物位于 `web/dist`；`web/wrangler.jsonc` 将相对 `web` 根目录的 `./dist` 声明为静态资源。本项目使用 Workers，不是 Pages 项目，因此不设置 Pages 输出目录。请将 Hugo 构建命令替换为上述命令。
 
-The Worker forwards only same-origin `/api/*` traffic to the configured backend. It does not read or store API keys or customer data. Set `BACKEND_ORIGIN` as a non-secret Worker variable; never put access credentials there. / Worker 仅转发同源 `/api/*` 请求，不读取或保存 Azure 密钥或客户数据。`BACKEND_ORIGIN` 是非敏感 Worker 变量，不得将访问凭据写在此处。
+Set the non-secret runtime variable `BACKEND_ORIGIN` in Worker Settings > Variables and Secrets to the FastAPI service's HTTPS origin without a trailing slash. `web/wrangler.jsonc` sets `keep_vars: true` so this dashboard-managed value survives Wrangler deployments. If it is missing, the proxy returns 503. Azure key, group access code, and session secret belong only in the FastAPI host's Secrets, never in Worker variables. / 在 Worker Settings > Variables and Secrets 将非敏感运行时变量 `BACKEND_ORIGIN` 设置为 FastAPI 服务的 HTTPS 根地址，末尾不加斜杠。`web/wrangler.jsonc` 设置 `keep_vars: true`，确保 Wrangler 部署保留此控制台变量；若未配置，代理返回 503。Azure key、组内访问码和会话密钥仅放在 FastAPI 主机 Secrets，不得放入 Worker variables。
+
+`web/wrangler.jsonc` routes only `cloudcore.moyee.uk/*` in zone `moyee.uk`. It does not match `moyee.uk/*` or change the personal-site Worker. / `web/wrangler.jsonc` 仅路由 `moyee.uk` 区域下的 `cloudcore.moyee.uk/*`，不会匹配 `moyee.uk/*`，也不会修改个人主站 Worker。
+
+## 3. Local checks / 本地检查
+
+From `web`, run `npm ci`, `npm run build`, `npm test`, and `npm run deploy:check`. The last command is Wrangler's `--dry-run`; it bundles and validates without deploying. Do not run `npx wrangler deploy` until the API host and `BACKEND_ORIGIN` are configured and reviewed. / 在 `web` 目录执行 `npm ci`、`npm run build`、`npm test` 和 `npm run deploy:check`。最后一项使用 Wrangler `--dry-run`，只打包和校验，不部署。API 主机与 `BACKEND_ORIGIN` 配置并审查前，不要运行 `npx wrangler deploy`。
+
+After a separately authorized deployment, verify the homepage, `/api/health`, login cookie attributes, unauthenticated API rejection, and that page load does not start analysis. / 单独授权部署后，验证首页、`/api/health`、登录 Cookie 属性、未认证 API 请求被拒，以及页面加载不会启动分析。
 
 ## 4. Synthetic-only acceptance / 模拟数据验收
 
-1. Log in using the group code. / 使用组内访问码登录。
-2. Confirm the badge says Synthetic Data and Human Approval Required. / 确认页面显示 Synthetic Data 和 Human Approval Required。
-3. Click Run AI analysis to send the bundled 45-row synthetic CSV to Azure. This can incur token charges. / 点击 Run AI analysis，才会将随项目提供的 45 条模拟记录发送 Azure；可能产生 token 费用。
-4. Verify all 45 messages complete, failed count is zero, CSV has seven ordered output columns, and messages meet V0.2.1 constraints. / 检查 45 条全部完成、失败数为零、CSV 七列顺序正确且消息符合 V0.2.1 规则。
-5. Never test this demo with actual CloudCore customer/course data unless separate authorization has been granted and service-side governance has been reviewed. / 未取得单独授权并完成服务端治理审查前，禁止用 CloudCore 真实客户/课程数据测试。
+The Azure end-to-end run is a separate billable action and may use only the bundled 45-row synthetic CSV. Confirm 45 completed rows, zero failures, and the exact seven output columns. Never send actual CloudCore customer/course data without separate authorization and service-side governance. / Azure 端到端运行是单独的计费操作，只能使用随项目提供的 45 行模拟 CSV。确认 45 条完成、失败数为 0、输出列严格为七列。未经单独授权和服务端治理，不得发送 CloudCore 真实客户/课程数据。
 
-## 5. Operational storage / 运行存储
-
-Mount the persistent disk at `/var/data`. It contains SQLite task state, per-task uploaded source, checkpoints and output files. Back it up using the hosting provider's approved method. No retention/deletion job is implemented yet; operators should remove completed task folders according to the group's approved retention schedule. / 持久盘挂载到 `/var/data`，其中保存任务 SQLite 状态、任务输入、检查点和结果。按主机提供的方式备份。当前未实现自动清理，运维人员应按小组批准的数据保留规则删除已完成任务目录。
+The persistent `/var/data` volume holds task state, source uploads, checkpoints and outputs. Follow the group's approved retention schedule for manual cleanup. / 持久卷 `/var/data` 保存任务状态、上传源文件、检查点和输出；按小组批准的保留计划手动清理。
