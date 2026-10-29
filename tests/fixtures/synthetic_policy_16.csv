@@ -1,0 +1,17 @@
+customer_id,industry,region,tenure_months,products,monthly_recurring_revenue,support_tier,churn_probability
+SYN001,Technology,WA,4,Cloud Hosting,1500,Basic,0.84
+SYN002,Retail,NSW,24,Cloud Storage,10000,Basic,0.30
+SYN003,Healthcare,VIC,8,Managed Network,1500,Standard,0.71
+SYN004,Education,QLD,11,Cloud Hosting + Storage,1999.99,Premium,0.62
+SYN005,Hospitality,WA,12,Cloud Hosting,1999.99,Standard,0.49
+SYN006,Manufacturing,SA,60,Backup + Managed Network,0,Premium,0.30
+SYN007,Finance,NSW,11,Cloud Storage,2000,Standard,0.53
+SYN008,Logistics,VIC,1,Cloud Hosting,10000,Premium,0.56
+SYN009,Professional Services,WA,12,Backup + Storage,2000,Standard,0.38
+SYN010,Construction,QLD,12,Managed Network,10000,Premium,0.30
+SYN011,Technology,NSW,100,Cloud Hosting + Backup,10000,Standard,0.30
+SYN012,Retail,VIC,12,Cloud Storage,2000,Basic,0.30
+SYN013,Healthcare,WA,0,Managed Network,0,Basic,0.00
+SYN014,Education,SA,0,Cloud Hosting,2000,Premium,1.00
+SYN015,Hospitality,QLD,100,Backup + Storage,10000,Standard,0.30
+SYN016,Manufacturing,NSW,0,Cloud Storage,1999,Premium,0.99

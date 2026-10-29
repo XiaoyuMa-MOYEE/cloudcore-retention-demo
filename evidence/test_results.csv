@@ -1,0 +1,6 @@
+case,status,records,details,input_tokens,output_tokens,total_tokens
+mocked_pytest_suite,passed,40,"40 automated tests passed; includes approval-language rejection, natural-style checks, and checkpoint invalidation on prompt-content changes",,,
+same_offer_diversity_sample,passed,3,"Three distinct synthetic profiles, all O1; product-aware customer wording; messages differed without invented situations",729,637,1366
+azure_full_synthetic_batch_v0_2_1,passed,45,"Three batches; all messages passed workflow, process, context, formulaic-opening, Offer, and word-count checks",3377,4441,7818
+final_offers_contract,passed,45,"Exactly seven ordered columns; unique IDs; input fields preserved; Python-generated Offer and Reason",,,
+message_workflow_scan,passed,45,"No approval/draft/internal-workflow text; no unconfirmed CTA/process wording; no message over 80 words",,,

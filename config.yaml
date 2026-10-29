@@ -1,0 +1,24 @@
+batch_size: 20
+provider: azure_openai
+model: gpt-5-mini
+model_version: "2025-08-07"
+api_key_env: AZURE_OPENAI_API_KEY
+base_url: https://cloudcore-ai-resource.openai.azure.com/openai/v1/
+request_timeout_seconds: 60
+batch_retry_count: 2
+record_retry_count: 1
+allow_external_cloudcore_data: false
+checkpoint_path: data/checkpoints/messages.json
+input_path: data/input/high_risk_customers.csv
+output_path: data/output/offers.csv
+analysis_path: data/output/internal_analysis.csv
+errors_path: data/output/errors.csv
+generation_log_path: data/output/generation_log.json
+validation_report_path: data/output/input_validation_report.csv
+prepared_requests_path: data/output/prepared_requests.json
+prepared_id_map_path: data/output/prepared_id_map.json
+valid_support_tiers:
+  - Basic
+  - Standard
+  - Premium
+prompt_version: v0.2.1

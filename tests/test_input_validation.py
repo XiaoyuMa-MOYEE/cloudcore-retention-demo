@@ -1,0 +1,54 @@
+import csv
+
+import pytest
+
+from src.input_validation import validate_csv
+from conftest import customer_row, write_csv
+
+
+TIERS = ("Basic", "Standard", "Premium")
+
+
+def test_valid_tier_matching_is_configurable_and_preserves_raw_value(tmp_path):
+    path = write_csv(tmp_path / "valid.csv", [customer_row(tier=" premium ")])
+    result = validate_csv(path, TIERS)
+    assert result.valid
+    assert result.customers[0].raw["support_tier"] == " premium "
+
+
+def test_unknown_tier_is_reported_not_guessed(tmp_path):
+    path = write_csv(tmp_path / "unknown.csv", [customer_row(tier="Gold")])
+    result = validate_csv(path, TIERS)
+    assert not result.valid
+    assert any(i.field == "support_tier" and "Gold" in i.problem for i in result.issues)
+    assert result.customers == ()
+
+
+@pytest.mark.parametrize(("field", "value"), [
+    ("tenure_months", "1.5"),
+    ("monthly_recurring_revenue", "-0.01"),
+    ("churn_probability", "1.01"),
+])
+def test_invalid_numeric_values_are_rejected_without_source_edits(tmp_path, field, value):
+    row = customer_row()
+    row[field] = value
+    path = write_csv(tmp_path / "invalid.csv", [row])
+    before = path.read_bytes()
+    result = validate_csv(path, TIERS)
+    assert not result.valid
+    assert any(issue.field == field for issue in result.issues)
+    assert path.read_bytes() == before
+
+
+def test_duplicate_ids_and_missing_columns_are_reported(tmp_path):
+    path = write_csv(tmp_path / "duplicate.csv", [customer_row("D1"), customer_row("D1")])
+    result = validate_csv(path, TIERS)
+    assert any(issue.field == "customer_id" and "Duplicate" in issue.problem for issue in result.issues)
+
+    row_without_region = customer_row()
+    row_without_region.pop("region")
+    columns = list(row_without_region)
+    missing = write_csv(tmp_path / "missing.csv", [row_without_region], columns=columns)
+    result = validate_csv(missing, TIERS)
+    assert result.issues[0].field == "header"
+    assert "region" in result.issues[0].problem

@@ -1,0 +1,34 @@
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.tsbuildinfo
+.venv/
+venv/
+.pytest_cache/
+.pytest-tmp/
+
+# Runtime/customer data
+/data/output/*
+!/data/output/README.md
+/data/checkpoints/*
+!/data/checkpoints/README.md
+# Input files, including the user-supplied development CSV, stay local.
+/data/input/*.csv
+!/data/input/README.md
+!/data/input/模拟数据.csv
+
+# Local logs and temporary/atomic-write files
+*.log
+*.tmp
+*.part
+/data/web_runtime/
+/web/node_modules/
+/web/dist/
+/web/.env
+/web/.env.*
+!/web/.env.example

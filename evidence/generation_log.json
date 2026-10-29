@@ -1,0 +1,41 @@
+{
+  "input_sha256": "e9e57c0244fe2a74ebca248a182ee7ef3e36f17a1cc3f810df9338c9875abeb2",
+  "prompt_version": "v0.2.1",
+  "prompt_sha256": "c7a8f3e252ed094a9d3fa5b9475eab2a855f38a68be57b611af3240f336fab3e",
+  "provider": "azure_openai",
+  "model": "gpt-5-mini",
+  "model_version": "2025-08-07",
+  "call_count": 3,
+  "token_usage": {
+    "input_tokens": 3377,
+    "output_tokens": 4441,
+    "total_tokens": 7818
+  },
+  "calls": [
+    {
+      "batch_number": 1,
+      "request_id": "resp_074ecdab4beb46e0016ae370d656c88193b0ab0a28e0faae90",
+      "model": "gpt-5-mini",
+      "input_tokens": 1293,
+      "output_tokens": 2046,
+      "total_tokens": 3339
+    },
+    {
+      "batch_number": 2,
+      "request_id": "resp_004fe589a41ab3fd016ae370e5b3a48195b3424dc10e48a19e",
+      "model": "gpt-5-mini",
+      "input_tokens": 1289,
+      "output_tokens": 1680,
+      "total_tokens": 2969
+    },
+    {
+      "batch_number": 3,
+      "request_id": "resp_086fa50bb5525bec016ae370f42e2481939dff57f005ba156f",
+      "model": "gpt-5-mini",
+      "input_tokens": 795,
+      "output_tokens": 715,
+      "total_tokens": 1510
+    }
+  ],
+  "failed_records": 0
+}

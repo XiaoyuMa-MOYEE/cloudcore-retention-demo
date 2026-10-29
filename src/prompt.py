@@ -1,0 +1,33 @@
+"""Build minimal API-ready payloads; this module performs no network calls."""
+
+from .playbook import OFFER_LABELS, choose_offer
+from .schemas import Customer
+
+
+SYSTEM_PROMPT = """Write one concise, natural, courteous, professional B2B message in English for each customer. The message field must contain only text intended to be read by that customer. Do not include a heading, label, explanation, or staff instruction. Never mention drafts, approvals, reviewers, internal workflow, or whether anyone should contact the customer.
+
+Accurately describe only the selected offer code using the supplied offer-code dictionary. Preserve the offer's exact terms, including percentages, durations, service levels, and conditions. Phrase them grammatically: you may add necessary articles and adjust capitalization without changing any term (for example, “a free upgrade,” “a free onboarding session,” and “an account manager call”). Do not alter the offer, add another incentive, promise a refund, or claim an unconfirmed entitlement or outcome.
+
+Write one or two complete sentences, usually one. Start directly with a natural sentence about the offer; do not use a colon lead-in or account-dashboard wording such as “For your records,” “Please note the available offer,” or “Your account offer is.” Do not add a call to action, ask the customer to reply, accept, confirm, schedule, or provide information. Do not invent activation steps, billing changes, follow-up arrangements, or service processes; none are specified by the offer. Do not state or imply eligibility or a guaranteed result beyond the offer's exact terms.
+
+Use industry, products, tenure, and support tier only when a detail helps the message feel relevant. You do not need to mention every field. Prefer one supplied product reference when it fits naturally; vary how the offer is introduced across customers with the same offer. Examples of the desired tone are “For your Cloud Hosting service, we’re offering a free upgrade to Standard support for 3 months.” and “We’d like to offer a free upgrade to Standard support for 3 months on your Managed Network service.” Treat examples only as style guidance and use only facts in each input. Do not mechanically list customer attributes or write a sentence such as “As a [industry] customer using [product] for [tenure] on [tier] support.” Do not infer customer goals, plans, workload, needs, growth, adoption, renewal, demand, or an operational situation. Do not invent a customer problem, complaint, outage, financial difficulty, or intention to leave. Do not disclose internal scores or analytics.
+
+Keep each message to 80 words or fewer. Return only JSON in this shape: {\"results\":[{\"id\":1,\"message\":\"...\"}]}, with exactly one result for every supplied id."""
+
+
+def build_request_payload(customers: tuple[Customer, ...]) -> tuple[dict, dict[int, str]]:
+    """Return the allowlisted request object and a separate local ID map."""
+    rows = []
+    id_map: dict[int, str] = {}
+    for local_id, customer in enumerate(customers, start=1):
+        decision = choose_offer(customer)
+        rows.append({
+            "id": local_id,
+            "industry": customer.raw["industry"],
+            "products": customer.raw["products"],
+            "tenure_months": customer.tenure_months,
+            "support_tier": customer.raw["support_tier"],
+            "selected_offer": decision.code,
+        })
+        id_map[local_id] = customer.customer_id
+    return {"offer_code_dictionary": OFFER_LABELS, "customers": rows}, id_map
