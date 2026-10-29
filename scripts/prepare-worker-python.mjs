@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 const projectRoot = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const moduleRoot = resolve(projectRoot, "python_modules");
 const coreTarget = resolve(moduleRoot, "src");
-const backendTarget = resolve(moduleRoot, "backend");
+const appTarget = resolve(moduleRoot, "cloudflare_app.py");
 
 await mkdir(moduleRoot, { recursive: true });
 const copyPackage = async (source, target) => {
@@ -18,5 +18,5 @@ const copyPackage = async (source, target) => {
 
 await Promise.all([
   copyPackage(resolve(projectRoot, "src"), coreTarget),
-  copyPackage(resolve(projectRoot, "backend"), backendTarget),
+  cp(resolve(projectRoot, "backend", "cloudflare_app.py"), appTarget),
 ]);

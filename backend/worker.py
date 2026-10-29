@@ -2,6 +2,6 @@
 
 from workers import asgi
 
-from backend.cloudflare_app import app
+from cloudflare_app import app
 
 Default = asgi.entrypoint(app)
