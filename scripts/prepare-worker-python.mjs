@@ -5,10 +5,18 @@ import { fileURLToPath } from "node:url";
 const projectRoot = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const moduleRoot = resolve(projectRoot, "python_modules");
 const coreTarget = resolve(moduleRoot, "src");
+const backendTarget = resolve(moduleRoot, "backend");
 
 await mkdir(moduleRoot, { recursive: true });
-await rm(coreTarget, { recursive: true, force: true });
-await cp(resolve(projectRoot, "src"), coreTarget, {
-  recursive: true,
-  filter: (source) => !source.includes("__pycache__") && !source.endsWith(".pyc"),
-});
+const copyPackage = async (source, target) => {
+  await rm(target, { recursive: true, force: true });
+  await cp(source, target, {
+    recursive: true,
+    filter: (path) => !path.includes("__pycache__") && !path.endsWith(".pyc"),
+  });
+};
+
+await Promise.all([
+  copyPackage(resolve(projectRoot, "src"), coreTarget),
+  copyPackage(resolve(projectRoot, "backend"), backendTarget),
+]);
