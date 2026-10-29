@@ -9,6 +9,13 @@ __pycache__/
 *.tsbuildinfo
 .venv/
 venv/
+/.uv-worker-venv/
+/.uv-cache/
+/.venv-workers/
+/python_modules/
+/cloudcore_retention_demo.egg-info/
+/worker-bundle/
+/.worker-bundle/
 .pytest_cache/
 .pytest-tmp/
 
@@ -29,6 +36,10 @@ venv/
 /data/web_runtime/
 /web/node_modules/
 /web/dist/
+/web/public/cloudcore-config.yaml
+/web/public/simulated-data.csv
+/.pytest-run-*/
+/web/.wrangler-dry-run/
 /web/.env
 /web/.env.*
 !/web/.env.example

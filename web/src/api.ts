@@ -1,7 +1,7 @@
 import type { Customer, Task } from "./types";
 
 async function api<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(path, { ...init, credentials: "include" });
+  const response = await fetch(path, init);
   const body = await response.json().catch(() => ({}));
   if (!response.ok) {
     const detail = body.detail;
@@ -9,8 +9,8 @@ async function api<T>(path: string, init?: RequestInit): Promise<T> {
       ? "\n" +
         detail.errors
           .map(
-            (x: { row_number?: number; field?: string; problem?: string }) =>
-              `Row ${x.row_number ?? "?"} · ${x.field}: ${x.problem}`,
+            (x: { row_number?: number; customer_id?: string; field?: string; problem?: string }) =>
+              `${x.customer_id ? `${x.customer_id} · ` : ""}Row ${x.row_number ?? "?"} · ${x.field ?? ""}: ${x.problem}`,
           )
           .join("\n")
       : "";
@@ -23,20 +23,9 @@ async function api<T>(path: string, init?: RequestInit): Promise<T> {
   return body as T;
 }
 
-export const getSession = () => api<{ authenticated: boolean }>("/api/session");
-export const login = (access_code: string) =>
-  api("/api/login", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ access_code }),
-  });
-export const logout = () => api("/api/logout", { method: "POST" });
 export const getDemo = () =>
-  api<{
-    customers: Customer[];
-    synthetic_data: boolean;
-    human_approval_required: boolean;
-  }>("/api/demo");
+  api<{ customers: Customer[]; synthetic_data: boolean; human_approval_required: boolean }>("/api/demo");
+
 export const validateCsv = (file: File) => {
   const body = new FormData();
   body.append("file", file);
@@ -49,26 +38,18 @@ export const validateCsv = (file: File) => {
     message: string;
   }>("/api/upload/validate", { method: "POST", body });
 };
-export const startAnalysis = (mode: "mock" | "live" = "live") =>
-  api<{ task_id: string }>("/api/analysis?mode=" + mode, { method: "POST" });
-export const startUploadAnalysis = (
-  file: File,
-  mode: "mock" | "live" = "live",
-) => {
+
+export const analyze = (file?: File) => {
   const body = new FormData();
-  body.append("file", file);
-  return api<{ task_id: string }>("/api/analysis/upload?mode=" + mode, {
-    method: "POST",
-    body,
-  });
+  if (file) body.append("file", file);
+  return api<Task>("/api/analyze", { method: "POST", body });
 };
-export const getTask = (id: string) => api<Task>(`/api/analysis/${id}`);
-export const getLatestTask = () =>
-  api<{ task: Task | null }>("/api/analysis/latest");
-export const retryTask = (id: string) =>
-  api(`/api/analysis/${id}/retry`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ failed_only: true }),
-  });
-export const downloadUrl = (id: string) => `/api/analysis/${id}/download`;
+
+export function downloadCsv(csv: string) {
+  const url = URL.createObjectURL(new Blob(["\uFEFF", csv], { type: "text/csv;charset=utf-8" }));
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "offers.csv";
+  link.click();
+  URL.revokeObjectURL(url);
+}

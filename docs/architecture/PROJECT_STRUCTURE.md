@@ -1,58 +1,40 @@
-# 项目结构规划 / Project Structure Plan
+# Project Structure / 项目结构
 
-本目录结构保留原有 Python Core，并补充 V0.3 React Web 与 FastAPI 演示服务。/ This layout preserves the existing Python Core and adds the V0.3 React Web and FastAPI demo service.
+The project keeps the original Python Core and CLI and adds one React/Vite + FastAPI Cloudflare Worker for the short-lived demo. The web API is stateless and does not need a database, separate API host, or persistent disk. / 项目保留原 Python Core 和 CLI，并新增一个由 React/Vite 与 FastAPI 组成的 Cloudflare Worker 短期演示站。网页 API 无状态，不需要数据库、独立 API 主机或持久磁盘。
 
 ```text
 .
-├── AGENTS.md                         # 仓库级 Codex/Agent 工作规则 / Repository agent rules
-├── README.md                         # 项目概览与边界 / Project overview and boundaries
-├── config.yaml                       # 非敏感运行配置模板 / Non-secret runtime configuration
-├── .env.example                      # 环境变量示例，不含密钥 / Environment example, no secrets
-├── .gitignore                        # 忽略密钥、运行产物与临时文件 / Ignore secrets and runtime artifacts
-├── requirements.txt                  # Python 运行依赖 / Python runtime dependencies
-├── docs/
-│   ├── specifications/               # 原始需求与规格版本 / Original requirements and versions
-│   ├── architecture/                 # 架构、流程与接口说明 / Architecture, flow, and interfaces
-│   └── records/                      # 决策、开发、验证与交接记录 / Decision, development, verification, handoff records
-├── src/
-│   ├── cli.py                        # 命令行入口 / CLI entry point
-│   ├── config.py                     # 配置加载与校验 / Configuration loading and validation
-│   ├── schemas.py                    # 输入输出结构 / Input and output schemas
-│   ├── input_validation.py           # 只读输入契约验证 / Read-only input contract validation
-│   ├── playbook.py                   # O1–O4 确定性规则 / Deterministic O1–O4 rules
-│   ├── internal_analysis.py          # 内部探索性指标 / Internal exploratory metrics
-│   ├── batching.py                   # 可配置批次构建 / Configurable batching
-│   ├── prompt.py                     # 提示词与允许字段 / Prompt and field allowlist
-│   ├── output_validation.py          # 模型响应校验 / Model response validation
-│   ├── pipeline.py                   # 编排、恢复、完整发布 / Orchestration, recovery, publication
-│   └── providers/                    # Provider 适配层 / Provider adapters
+├── AGENTS.md                         # Project and agent rules / 项目与 Agent 规则
+├── README.md                         # Project use and Cloudflare setup / 项目和 Cloudflare 使用说明
+├── config.yaml                       # Non-secret provider/model/batch settings / 非敏感 Provider、模型、批次配置
+├── .env.example                      # Local environment example / 本地环境变量示例
+├── .gitignore                        # Secrets and generated output exclusions / 密钥和生成文件忽略规则
+├── pyproject.toml                    # Cloudflare Python Worker dependencies / Worker Python 依赖
+├── pylock.toml                       # Pywrangler-compatible dependency lock / Pywrangler 依赖锁定
+├── uv.lock                           # Local Python dependency lock / 本地 Python 依赖锁定
+├── requirements-local.txt            # Local CLI/API preview dependencies / 本地 CLI 和 API 预览依赖
+├── wrangler.jsonc                    # Single Python + Static Assets Worker / Python 与静态资源 Worker 配置
 ├── backend/
-│   └── app.py                         # FastAPI 登录、校验、任务 API / Login, validation, task API
+│   ├── cloudflare_app.py             # Stateless FastAPI routes / 无状态 FastAPI 接口
+│   └── worker.py                     # Cloudflare Python Worker and ASGI entry / Worker 与 ASGI 入口
+├── scripts/prepare-worker-python.mjs # Copy existing core into generated modules / 复制现有核心模块
+├── src/                              # Existing Python business core and CLI / 现有 Python 业务核心和 CLI
 ├── web/
-│   └── src/ui/                        # React + TypeScript 页面 / React + TypeScript UI
-├── deploy/cloudflare/                 # Pages API 路由 Worker 配置 / Pages API route Worker config
-├── Dockerfile                         # FastAPI 容器 / FastAPI container
-├── render.yaml                        # 独立后端与持久盘模板 / Standalone API and persistent disk template
-├── tests/
-│   ├── fixtures/                     # 合成数据与模拟响应 / Synthetic data and mock responses
-│   └── ...                           # 单元与集成测试 / Unit and integration tests
-├── data/
-│   ├── input/                        # 输入 CSV（不提交真实课程数据）/ Input CSV (no real course data committed)
-│   ├── output/                       # offers、分析和错误输出 / Offers, analysis, and error outputs
-│   └── checkpoints/                  # 可恢复的批次检查点 / Resumable batch checkpoints
-├── data/web_runtime/                 # Web 任务 SQLite、上传与检查点（忽略）/ Web SQLite, uploads and checkpoints (ignored)
-└── evidence/                         # 可复核测试与演示证据 / Reviewable test and demo evidence
+│   ├── scripts/prepare-worker-assets.mjs # Copy public config and demo CSV / 复制公开配置与模拟 CSV
+│   └── src/                          # React + TypeScript app / React + TypeScript 前端
+├── docs/                             # Specifications, architecture, deployment, records / 规格、架构、部署与记录
+├── tests/                            # Mock-only automated tests / 仅使用 Mock 的自动化测试
+├── data/input/                       # Synthetic development data / 模拟开发数据
+└── evidence/                         # Reviewable test and demo evidence / 可复核测试与演示证据
 ```
 
-## 模块职责 / Module responsibilities
+## Module responsibilities / 模块职责
 
-1. `config.py` 和 `cli.py` 读取运行选项、检查授权状态并提供 dry-run。/ Load run options, check authorization state, and provide dry-run.
-2. `input_validation.py` 仅验证，不修复；有问题即生成诊断并停止交接。/ Validate without repairing; emit diagnostics and stop handoff on violations.
-3. `playbook.py` 对每条有效记录按 O1 到 O4 生成确定性 Offer/Reason。/ Assign deterministic Offer/Reason in O1-to-O4 order.
-4. `internal_analysis.py` 单独计算探索性 `risk_weighted_mrr_index`。/ Calculate the exploratory index separately.
-5. `prompt.py`, `batching.py`, `providers/`, `output_validation.py` 负责最小化请求、批处理和受限消息生成。/ Handle minimized requests, batching, and constrained message generation.
-6. `pipeline.py` 管理重试、检查点、错误记录，并且仅在所有有效客户成功后发布最终文件。/ Manage retries, checkpoints, errors, and publish only after every valid customer succeeds.
+1. `src/input_validation.py` validates source CSV without rewriting fields; `validate_csv_text` also enables in-memory Worker validation. / 验证源 CSV 且不改写字段；`validate_csv_text` 支持 Worker 内存校验。
+2. `src/playbook.py` deterministically applies O1–O4 and owns Offer/Reason. / 确定性应用 O1–O4 并生成 Offer/Reason。
+3. `src/internal_analysis.py` computes the exploratory risk-weighted MRR index. / 计算探索性风险加权 MRR 指标。
+4. `src/prompt.py`, `src/batching.py`, and `src/output_validation.py` prepare minimal API requests, batch them, and validate generated Message. / 准备最小 API 请求、分批并校验生成文案。
+5. `backend/cloudflare_app.py` validates, calls Azure via Worker fetch, and returns complete results/CSV without saving request data. / 校验输入，使用 Worker Fetch 调用 Azure，并在不落盘的前提下返回完整结果和 CSV。
+6. `web/src` displays the synthetic demo, uploads CSV, starts analysis on click, and downloads the response. / 显示模拟数据、上传 CSV、由用户点击启动分析并下载结果。
 
-## 数据边界 / Data boundaries
-
-真实课程输入数据、输出客户数据、API 凭据和含敏感内容的日志不得提交到版本库。/ Do not commit real course input/output data, API credentials, or logs containing sensitive content.
+Real customer/course data, API credentials, and sensitive logs must never be committed. / 不得提交真实客户/课程数据、API 凭据或含敏感内容的日志。

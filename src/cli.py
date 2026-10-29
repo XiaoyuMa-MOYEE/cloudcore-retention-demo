@@ -28,7 +28,7 @@ def main() -> int:
         try:
             from dotenv import load_dotenv
         except ImportError:
-            print("Configuration error: python-dotenv is not installed. Install project dependencies with pip install -r requirements.txt.", file=sys.stderr)
+            print("Configuration error: python-dotenv is not installed. Install local dependencies with pip install -r requirements-local.txt.", file=sys.stderr)
             return 2
         load_dotenv(dotenv_path=Path.cwd() / ".env", override=False, encoding="utf-8-sig")
 

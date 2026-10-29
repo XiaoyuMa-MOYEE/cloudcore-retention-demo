@@ -5,10 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && node scripts/prepare-worker-assets.mjs && vite build",
     "preview": "vite preview --host 127.0.0.1",
-    "deploy": "wrangler deploy",
-    "deploy:check": "wrangler deploy --dry-run",
+    "deploy": "cd .. && uv run pywrangler deploy",
+    "deploy:check": "cd .. && uv run pywrangler deploy --dry-run",
     "test": "vitest run",
     "format": "prettier --write src vite.config.ts tsconfig.json package.json"
   },

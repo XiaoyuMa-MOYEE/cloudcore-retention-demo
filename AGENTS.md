@@ -19,14 +19,14 @@ These rules apply to all work in this repository. Original V0.2 requirements are
 - Keep documentation and user-facing project text bilingual (Chinese and English) where applicable. Keep the original specification under `docs/specifications/` without editing its requirements.
 - Azure OpenAI Responses API integration is authorized for the user-supplied synthetic development CSV. Never send actual CloudCore course data unless `allow_external_cloudcore_data: true` is explicitly set after authorization and the CLI emits its warning.
 - Keep data processing, Playbook decisions, Offer/Reason generation, output checks, and Azure provider execution in Python. React/TypeScript must not duplicate business logic.
-- The browser must never receive or persist API keys, group access codes, or session signing secrets. All data and analysis APIs require a valid HttpOnly, Secure, SameSite session cookie in deployment.
-- Web analysis may use only the bundled synthetic dataset by default. Uploaded CSV model calls require the server-side `ALLOW_UPLOADED_SYNTHETIC_ANALYSIS` setting; never offer a client-side data-scope override.
-- Web task state, outputs, uploaded files, and checkpoints must live in a configured persistent runtime volume, not a Cloudflare Worker local filesystem. Isolate file paths per task.
-- Do not modify the personal main site or its repository. Do not push to GitHub or deploy Cloudflare unless explicitly authorized in the current request.
+- This short-lived concept demo is intentionally public and has no login. Never put API keys in frontend data, assets, or source; the Azure key belongs in Cloudflare Worker Secret `AZURE_OPENAI_API_KEY`.
+- Web analysis may use only the bundled synthetic dataset by default. Other uploads require the server-side `ALLOW_UPLOADED_SYNTHETIC_ANALYSIS` setting and SIM*/SYN* IDs. Never offer a client-side data-scope override or send real CloudCore/customer/course data.
+- Web requests are stateless: process uploaded files in memory and return completed results in the response. Retain no server-side upload, task, output, database, or checkpoint; users download their results. Never rely on Worker-local filesystem state.
+- Do not modify the personal main site or its repository. Do not push to GitHub or deploy Cloudflare unless explicitly authorized by the user.
 
 ## Engineering workflow
 - Inspect existing files before changing them; preserve user work.
-- Keep modules small and readable. React/Vite, FastAPI, a small SQLite task registry, and deployment files are authorized by V0.3; avoid unrelated expansion.
+- Keep modules small and readable. React/Vite and FastAPI in one Cloudflare Python Worker are the authorized web architecture; no separate API host, database, or durable storage is part of this short-lived demo.
 - Automated tests must use synthetic fixtures and mocked providers; they must not incur API costs or transmit course data. User-authorized manual live checks may use the supplied synthetic dataset.
 - Do not claim that Figma, a demo video, live API runs, or quality evaluations exist unless actually produced and verified.
 - Record material design decisions and verification results under `docs/records/`; do not fabricate results.

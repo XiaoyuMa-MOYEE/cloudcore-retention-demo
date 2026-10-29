@@ -1,0 +1,21 @@
+{
+  "$schema": "./web/node_modules/wrangler/config-schema.json",
+  "name": "cloudcore-retention-demo",
+  "main": "backend/worker.py",
+  "compatibility_date": "2026-10-29",
+  "compatibility_flags": ["python_workers"],
+  "workers_dev": false,
+  "keep_vars": true,
+  "build": {
+    "command": "node scripts/prepare-worker-python.mjs"
+  },
+  "routes": [
+    { "pattern": "cloudcore.moyee.uk/*", "zone_name": "moyee.uk" }
+  ],
+  "assets": {
+    "directory": "./web/dist",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": true
+  }
+}

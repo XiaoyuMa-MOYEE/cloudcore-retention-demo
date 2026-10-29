@@ -31,7 +31,7 @@ class OpenAIResponsesProvider:
         try:
             from openai import OpenAI
         except ImportError as exc:
-            raise ValueError("OpenAI SDK is not installed. Install project dependencies with pip install -r requirements.txt.") from exc
+            raise ValueError("OpenAI SDK is not installed. Install local dependencies with pip install -r requirements-local.txt.") from exc
         api_key = os.environ.get(api_key_env, "").strip()
         if not api_key:
             raise ValueError(f"API key is missing. Set {api_key_env} in the local .env file or environment.")

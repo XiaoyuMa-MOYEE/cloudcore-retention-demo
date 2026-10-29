@@ -1,12 +1,12 @@
 # React Demo / React 演示前端
 
-React + TypeScript + Vite single-page application. It stores no credentials in localStorage; `fetch` uses same-origin HttpOnly session cookies. The initial 45-row grid is synthetic and never starts an analysis until the user selects **Run AI analysis**. / React + TypeScript + Vite 单页应用。不使用 localStorage 保存密钥；接口请求使用同源 HttpOnly 会话 Cookie。初始 45 条记录均为模拟数据，用户点击 **Run AI analysis** 前不会发起模型调用。
+React + TypeScript + Vite single-page application. It displays bundled synthetic data on load and calls the same-origin Python Worker only after the user selects **Run AI analysis**. There is no login or browser credential storage. Completed results stay in browser memory until the user downloads the CSV or leaves the page. / React + TypeScript + Vite 单页应用。打开时显示捆绑的模拟数据，只有用户点击 **Run AI analysis** 后才调用同源 Python Worker。不设登录，也不在浏览器保存凭证。分析结果在用户下载 CSV 或离开页面前暂存在浏览器内存。
 
 ```powershell
 npm ci
-npm run dev
 npm test
 npm run build
+npm run deploy:check
 ```
 
-Vite proxies `/api` to local FastAPI at `127.0.0.1:8000`. Production static output is `dist/`; Cloudflare Pages settings are in `../docs/deployment/README.md`. / 本地开发由 Vite 将 `/api` 代理到 `127.0.0.1:8000`；生产输出为 `dist/`，Cloudflare Pages 配置见部署手册。
+The build script copies the non-secret YAML config and synthetic CSV into `public/` for Worker asset access. Production assets are `dist/`. / 构建脚本会将不含机密的 YAML 配置和模拟 CSV 复制到 `public/`，供 Worker 读取。正式静态资源位于 `dist/`。

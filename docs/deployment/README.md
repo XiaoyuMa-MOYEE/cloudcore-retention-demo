@@ -1,39 +1,31 @@
-# Deployment Guide / 部署说明
+# Cloudflare Deployment / Cloudflare 部署
 
-This guide describes configuration and preflight only. No Cloudflare or API-host deployment is performed. / 本文说明配置和部署前检查，不执行 Cloudflare 或 API 主机部署。
+## Workers Builds values / Workers Builds 配置
 
-## Architecture / 架构
+- Root Directory: `.` (repository root) / 仓库根目录
+- Build Command: `pip install uv && cd web && npm ci && npm run build`
+- Deploy Command: `uv run pywrangler deploy`
+- Vite output directory: `web/dist` (Workers Static Assets; not a Pages output setting) / Vite 输出目录（Workers Static Assets，不是 Pages 输出设置）
 
-A single Cloudflare Worker serves the Vite Static Assets and forwards `/api/*` to the independent FastAPI Docker service on a persistent disk. The current FastAPI app uses SQLite plus per-task source, checkpoint and result files. Although Python Workers support FastAPI, isolate-local files do not provide the durable storage this app requires. Moving it to Cloudflare storage would require a broader backend redesign, so Python Offer/Reason, validation, Azure Message generation, task status and recovery remain in the existing container. / 单个 Cloudflare Worker 同时托管 Vite 静态资源，并将 `/api/*` 转发至挂载持久盘的独立 FastAPI Docker 服务。当前 FastAPI 使用 SQLite 及逐任务输入、检查点和结果文件。虽然 Python Workers 支持 FastAPI，但隔离实例本地文件无法满足本项目的持久化要求。迁移到 Cloudflare 存储会扩大后端重构，因此 Python Offer/Reason、校验、Azure Message 生成、任务状态和恢复仍在现有容器运行。
+The root Wrangler config selects `backend/worker.py` and enables `python_workers`; it serves React assets and FastAPI from the same Worker. Pywrangler is required to vendor the Python dependencies from `pyproject.toml`; the configured pre-bundle script adds the existing Python core modules. No `BACKEND_ORIGIN`, Render service, extra database, or durable storage is used. / 根目录 Wrangler 配置选择 `backend/worker.py` 并启用 `python_workers`；React 静态资源和 FastAPI 由同一 Worker 提供。必须使用 Pywrangler 打包 `pyproject.toml` 中的 Python 依赖；打包前脚本会加入现有 Python 核心模块。无需配置 `BACKEND_ORIGIN`、Render 服务、数据库或持久化存储。
 
-## 1. API host / API 主机
+## Cloudflare variables and secrets / Cloudflare 变量和机密
 
-1. Create the independent service from `render.yaml` / `Dockerfile` on a host with a persistent disk mounted at `/var/data`. / 使用 `render.yaml` 或 `Dockerfile` 创建独立服务，并将持久盘挂载到 `/var/data`。
-2. Configure server-only Secrets `GROUP_ACCESS_CODE`, `SESSION_SECRET`, and `AZURE_OPENAI_API_KEY`. Set `PUBLIC_ORIGIN=https://cloudcore.moyee.uk`, `COOKIE_SECURE=true`, and `ALLOW_UPLOADED_SYNTHETIC_ANALYSIS=false`. / 在服务端配置 Secret：`GROUP_ACCESS_CODE`、`SESSION_SECRET`、`AZURE_OPENAI_API_KEY`；设置 `PUBLIC_ORIGIN=https://cloudcore.moyee.uk`、`COOKIE_SECURE=true`、`ALLOW_UPLOADED_SYNTHETIC_ANALYSIS=false`。
-3. Keep the persistent disk enabled, then verify `/api/health`. Use synthetic data only. / 确保持久盘已启用，再验证 `/api/health`。仅使用模拟数据。
+1. In Cloudflare Dashboard → **Workers & Pages** → `cloudcore-retention-demo` → **Settings** → **Variables and Secrets**, add `AZURE_OPENAI_API_KEY` as a **Secret**. Do not add it to GitHub or any frontend `VITE_*` variable. / 在 Cloudflare Dashboard → **Workers & Pages** → `cloudcore-retention-demo` → **Settings** → **Variables and Secrets**，将 `AZURE_OPENAI_API_KEY` 添加为 **Secret**。不要提交到 GitHub，也不要设为前端 `VITE_*` 变量。
+2. To enable uploaded synthetic CSV files beyond the bundled exact dataset, add non-secret variable `ALLOW_UPLOADED_SYNTHETIC_ANALYSIS=true`. Files with customer IDs outside the synthetic `SIM*`/`SYN*` pattern remain blocked. Default: off. / 如需启用捆绑原文件以外的模拟 CSV，添加非敏感变量 `ALLOW_UPLOADED_SYNTHETIC_ANALYSIS=true`。客户 ID 不符合 `SIM*`/`SYN*` 的文件仍会被拒绝。默认关闭。
+3. The Worker has no login or access code because this is an intentionally public, short-term concept demo. Do not upload real CloudCore customer/course data. / 此项目为短期公开概念演示，不设登录和访问码。请勿上传 CloudCore 真实客户或课程数据。
 
-## 2. Cloudflare Workers Builds / Cloudflare Workers Builds 设置
+After adding/changing a Secret or variable, trigger a new deployment so the new Worker version receives it. GitHub push may trigger the connected Workers Build automatically. / 添加或修改 Secret、变量后，触发一次新部署使新 Worker 版本生效。连接 GitHub 的 Workers Build 可由推送自动触发。
 
-For the connected Worker `cloudcore-retention-demo`, set:
+## Local preflight / 本地部署前检查
 
-- Root directory: `web`
-- Build command: `npm run build`
-- Deploy command: `npx wrangler deploy` (or `npm run deploy`)
+```powershell
+.venv\Scripts\python.exe -m pytest tests --basetemp .pytest-tmp
+cd web
+npm test
+npm run build
+cd ..
+uv run pywrangler deploy --dry-run
+```
 
-The Vite output is `web/dist`; `web/wrangler.jsonc` declares `./dist` as Static Assets. This is a Workers project, not a Pages project, so do not set a Pages output directory. Replace the Hugo build command with the command above. / Vite 产物位于 `web/dist`；`web/wrangler.jsonc` 将相对 `web` 根目录的 `./dist` 声明为静态资源。本项目使用 Workers，不是 Pages 项目，因此不设置 Pages 输出目录。请将 Hugo 构建命令替换为上述命令。
-
-Set the non-secret runtime variable `BACKEND_ORIGIN` in Worker Settings > Variables and Secrets to the FastAPI service's HTTPS origin without a trailing slash. `web/wrangler.jsonc` sets `keep_vars: true` so this dashboard-managed value survives Wrangler deployments. If it is missing, the proxy returns 503. Azure key, group access code, and session secret belong only in the FastAPI host's Secrets, never in Worker variables. / 在 Worker Settings > Variables and Secrets 将非敏感运行时变量 `BACKEND_ORIGIN` 设置为 FastAPI 服务的 HTTPS 根地址，末尾不加斜杠。`web/wrangler.jsonc` 设置 `keep_vars: true`，确保 Wrangler 部署保留此控制台变量；若未配置，代理返回 503。Azure key、组内访问码和会话密钥仅放在 FastAPI 主机 Secrets，不得放入 Worker variables。
-
-`web/wrangler.jsonc` routes only `cloudcore.moyee.uk/*` in zone `moyee.uk`. It does not match `moyee.uk/*` or change the personal-site Worker. / `web/wrangler.jsonc` 仅路由 `moyee.uk` 区域下的 `cloudcore.moyee.uk/*`，不会匹配 `moyee.uk/*`，也不会修改个人主站 Worker。
-
-## 3. Local checks / 本地检查
-
-From `web`, run `npm ci`, `npm run build`, `npm test`, and `npm run deploy:check`. The last command is Wrangler's `--dry-run`; it bundles and validates without deploying. Do not run `npx wrangler deploy` until the API host and `BACKEND_ORIGIN` are configured and reviewed. / 在 `web` 目录执行 `npm ci`、`npm run build`、`npm test` 和 `npm run deploy:check`。最后一项使用 Wrangler `--dry-run`，只打包和校验，不部署。API 主机与 `BACKEND_ORIGIN` 配置并审查前，不要运行 `npx wrangler deploy`。
-
-After a separately authorized deployment, verify the homepage, `/api/health`, login cookie attributes, unauthenticated API rejection, and that page load does not start analysis. / 单独授权部署后，验证首页、`/api/health`、登录 Cookie 属性、未认证 API 请求被拒，以及页面加载不会启动分析。
-
-## 4. Synthetic-only acceptance / 模拟数据验收
-
-The Azure end-to-end run is a separate billable action and may use only the bundled 45-row synthetic CSV. Confirm 45 completed rows, zero failures, and the exact seven output columns. Never send actual CloudCore customer/course data without separate authorization and service-side governance. / Azure 端到端运行是单独的计费操作，只能使用随项目提供的 45 行模拟 CSV。确认 45 条完成、失败数为 0、输出列严格为七列。未经单独授权和服务端治理，不得发送 CloudCore 真实客户/课程数据。
-
-The persistent `/var/data` volume holds task state, source uploads, checkpoints and outputs. Follow the group's approved retention schedule for manual cleanup. / 持久卷 `/var/data` 保存任务状态、上传源文件、检查点和输出；按小组批准的保留计划手动清理。
+The preflight does not publish a deployment. Production deployment remains the connected Cloudflare Workers Build. / 前置检查不会发布部署；正式部署仍由 Cloudflare Workers Build 执行。

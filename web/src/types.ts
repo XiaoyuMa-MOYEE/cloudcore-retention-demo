@@ -14,11 +14,12 @@ export type Customer = {
   risk_weighted_mrr_index?: string;
 };
 export type Task = {
-  task_id: string;
   status: string;
   total: number;
   succeeded: number;
   failed: number;
+  offers_csv?: string;
+  token_usage?: { input_tokens: number; output_tokens: number; total_tokens: number };
   error?: string | null;
   results?: Array<Record<string, string>>;
   offer_distribution?: Record<string, number>;

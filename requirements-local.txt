@@ -1,3 +1,4 @@
+# Local CLI and FastAPI preview dependencies; Cloudflare Worker packages are in pyproject.toml.
 PyYAML>=6.0,<7.0
 openai>=1.66.0,<3.0
 python-dotenv>=1.0,<2.0
