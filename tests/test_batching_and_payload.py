@@ -7,7 +7,7 @@ from conftest import customer_row, write_csv
 def test_partial_batch_and_minimal_allowlist_payload(tmp_path):
     rows = [customer_row(f"T{i}") for i in range(5)]
     path = write_csv(tmp_path / "five.csv", rows)
-    records = validate_csv(path, ("Basic", "Standard", "Premium")).customers
+    records = validate_csv(path, ("Basic", "Standard", "Enterprise")).customers
     batches = list(make_batches(records, 2))
     assert [len(batch) for batch in batches] == [2, 2, 1]
 

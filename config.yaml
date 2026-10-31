@@ -20,5 +20,5 @@ prepared_id_map_path: data/output/prepared_id_map.json
 valid_support_tiers:
   - Basic
   - Standard
-  - Premium
+  - Enterprise
 prompt_version: v0.2.1

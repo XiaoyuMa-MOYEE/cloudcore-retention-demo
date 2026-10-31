@@ -36,7 +36,7 @@ def test_mock_pipeline_publishes_exact_schema_and_resumes_without_calls(tmp_path
     import src.pipeline as pipeline
 
     rows = [customer_row("A1", tier="Basic"), customer_row("A2", tier="Standard", mrr="1500"),
-            customer_row("A3", tier="Premium", tenure="11")]
+            customer_row("A3", tier="Enterprise", tenure="11")]
     input_path = write_csv(tmp_path / "input.csv", rows)
     config = app_config
     config = replace(config, input_path=str(input_path), batch_size=2)

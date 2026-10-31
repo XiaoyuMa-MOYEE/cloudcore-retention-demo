@@ -6,21 +6,22 @@ from src.input_validation import validate_csv
 from conftest import customer_row, write_csv
 
 
-TIERS = ("Basic", "Standard", "Premium")
+TIERS = ("Basic", "Standard", "Enterprise")
 
 
 def test_valid_tier_matching_is_configurable_and_preserves_raw_value(tmp_path):
-    path = write_csv(tmp_path / "valid.csv", [customer_row(tier=" premium ")])
+    path = write_csv(tmp_path / "valid.csv", [customer_row(tier=" enterprise ")])
     result = validate_csv(path, TIERS)
     assert result.valid
-    assert result.customers[0].raw["support_tier"] == " premium "
+    assert result.customers[0].raw["support_tier"] == " enterprise "
 
 
-def test_unknown_tier_is_reported_not_guessed(tmp_path):
-    path = write_csv(tmp_path / "unknown.csv", [customer_row(tier="Gold")])
+@pytest.mark.parametrize("tier", ["Gold", "Premium"])
+def test_unknown_tier_is_reported_not_guessed(tmp_path, tier):
+    path = write_csv(tmp_path / "unknown.csv", [customer_row(tier=tier)])
     result = validate_csv(path, TIERS)
     assert not result.valid
-    assert any(i.field == "support_tier" and "Gold" in i.problem for i in result.issues)
+    assert any(i.field == "support_tier" and tier in i.problem for i in result.issues)
     assert result.customers == ()
 
 
