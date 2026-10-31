@@ -12,8 +12,7 @@ The root Wrangler config selects `backend/worker.py` and enables `python_workers
 ## Cloudflare variables and secrets / Cloudflare 变量和机密
 
 1. In Cloudflare Dashboard → **Workers & Pages** → `cloudcore-retention-demo` → **Settings** → **Variables and Secrets**, add `AZURE_OPENAI_API_KEY` as a **Secret**. Do not add it to GitHub or any frontend `VITE_*` variable. / 在 Cloudflare Dashboard → **Workers & Pages** → `cloudcore-retention-demo` → **Settings** → **Variables and Secrets**，将 `AZURE_OPENAI_API_KEY` 添加为 **Secret**。不要提交到 GitHub，也不要设为前端 `VITE_*` 变量。
-2. To enable uploaded synthetic CSV files beyond the bundled exact dataset, add non-secret variable `ALLOW_UPLOADED_SYNTHETIC_ANALYSIS=true`. Files with customer IDs outside the synthetic `SIM*`/`SYN*` pattern remain blocked. Default: off. / 如需启用捆绑原文件以外的模拟 CSV，添加非敏感变量 `ALLOW_UPLOADED_SYNTHETIC_ANALYSIS=true`。客户 ID 不符合 `SIM*`/`SYN*` 的文件仍会被拒绝。默认关闭。
-3. The Worker has no login or access code because this is an intentionally public, short-term concept demo. Do not upload real CloudCore customer/course data. / 此项目为短期公开概念演示，不设登录和访问码。请勿上传 CloudCore 真实客户或课程数据。
+2. The Worker has no login or access code. Any visitor can upload a schema-valid CSV and click **Run AI Analysis**; use this only for data whose external processing is authorized. The initial page dataset remains the bundled synthetic CSV. / Worker 不设登录或访问码。任何访问者都可上传符合 Schema 的 CSV 并点击 **Run AI Analysis**；仅可对已获外部处理授权的数据使用此功能。页面初始数据仍为捆绑模拟 CSV。
 
 After adding/changing a Secret or variable, trigger a new deployment so the new Worker version receives it. GitHub push may trigger the connected Workers Build automatically. / 添加或修改 Secret、变量后，触发一次新部署使新 Worker 版本生效。连接 GitHub 的 Workers Build 可由推送自动触发。
 

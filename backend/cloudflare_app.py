@@ -101,15 +101,6 @@ def _validate(content: bytes, config: dict):
     return result.customers
 
 
-def _is_synthetic(content: bytes, customers, bundled: bytes) -> bool:
-    if hashlib.sha256(content).digest() == hashlib.sha256(bundled).digest():
-        return True
-    return bool(customers) and all(
-        customer.customer_id.strip().upper().startswith(("SIM", "SYN"))
-        for customer in customers
-    )
-
-
 class CloudflareAzureResponsesProvider:
     """Responses API adapter using Workers fetch (Python sockets are unavailable)."""
 
@@ -225,9 +216,6 @@ async def analyze_content(content: bytes, config: dict, api_key: str,
     if bundled is None:
         bundled = (ROOT / "data" / "input" / "模拟数据.csv").read_bytes()
     exact_bundled = hashlib.sha256(content).digest() == hashlib.sha256(bundled).digest()
-    uploaded_enabled = os.environ.get("ALLOW_UPLOADED_SYNTHETIC_ANALYSIS", "false").lower() == "true"
-    if not exact_bundled and not (uploaded_enabled and _is_synthetic(content, customers, bundled)):
-        raise HTTPException(403, "Only the bundled synthetic file is enabled by default; other SIM*/SYN* uploads need the server-side setting.")
     batch_size = int(config.get("batch_size", 20))
     if batch_size <= 0:
         raise HTTPException(503, "Configured batch_size must be positive.")
@@ -293,7 +281,7 @@ async def analyze_content(content: bytes, config: dict, api_key: str,
         "results": results, "offer_distribution": distribution,
         "risk_weighted_mrr_index": float(risk_index),
         "risk_index_label": "Exploratory internal review index; not expected loss, forecast, ROI, or impact.",
-        "synthetic_data": True, "human_approval_required": True,
+        "synthetic_data": exact_bundled, "human_approval_required": True,
         "token_usage": usage,
         "offers_csv": output.getvalue(),
     }
@@ -318,13 +306,9 @@ async def upload_validate(request: Request, file: Annotated[UploadFile, File()])
     config = await _load_worker_config(request)
     content = await _csv_content(file)
     customers = _validate(content, config)
-    synthetic = _is_synthetic(content, customers, await _read_asset(request, "simulated-data.csv"))
-    enabled = os.environ.get("ALLOW_UPLOADED_SYNTHETIC_ANALYSIS", "false").lower() == "true"
-    can_analyze = synthetic and (content == await _read_asset(request, "simulated-data.csv") or enabled)
     return {"valid": True, "rows": len(customers), "customers": [c.raw for c in customers],
-            "synthetic_data": synthetic, "analysis_allowed": can_analyze,
-            "message": "Validated; ready for analysis." if can_analyze else
-            "Validated only. Only the bundled synthetic file is enabled by default."}
+            "synthetic_data": False, "analysis_allowed": True,
+            "message": "Validated; ready for analysis."}
 
 
 @app.post("/api/analyze")

@@ -31,13 +31,13 @@ The Python Worker entry is `backend/worker.py`, with the `python_workers` compat
 ## Cloudflare settings / Cloudflare 设置
 
 1. In Worker **Settings → Variables and Secrets**, add Secret `AZURE_OPENAI_API_KEY` using the Azure key value. Never put it in source or Vite configuration. / 在 Worker **Settings → Variables and Secrets** 中新增 Secret `AZURE_OPENAI_API_KEY` 并填写 Azure Key；不要写入源代码或 Vite 配置。
-2. For upload analysis of synthetic files other than the bundled exact file, set the non-secret variable `ALLOW_UPLOADED_SYNTHETIC_ANALYSIS=true`. Analysis still rejects non-synthetic customer IDs; the default is off. / 如需分析与捆绑文件不完全相同的模拟文件，设置非敏感变量 `ALLOW_UPLOADED_SYNTHETIC_ANALYSIS=true`。仍会拒绝非模拟客户 ID；默认关闭。
+2. The page initially displays the bundled synthetic dataset. A user-uploaded CSV that passes input validation can be analyzed after **Run AI Analysis** is clicked. Uploading only validates and displays the CSV; it does not call Azure. / 页面初始显示捆绑模拟数据。用户上传的 CSV 通过输入校验后，可在点击 **Run AI Analysis** 时进行分析。上传操作仅校验并显示 CSV，不会调用 Azure。
 3. Trigger a Workers build from the connected GitHub repository. No personal-site Astro Worker settings need to change. / 从已连接的 GitHub 仓库触发 Workers 构建；无需更改个人主站 Astro Worker。
 
 ## Data and limits / 数据与限制
 
 - Page load displays only the bundled synthetic dataset; no Azure call occurs until **Run AI Analysis** is clicked. / 页面默认仅展示捆绑模拟数据；用户点击 **Run AI Analysis** 后才调用 Azure。
-- Public demo has no access control. Do not upload real customer, course, or confidential data. Only the bundled synthetic data is enabled by default; other uploads must use SIM*/SYN* IDs and require the server-side flag. / 演示站不设访问控制。不得上传真实客户、课程或保密数据。默认只允许捆绑模拟数据；其他上传文件必须使用 SIM*/SYN* ID，并由服务端变量启用。
+- Public demo has no access control. Any visitor can upload a schema-valid file and click **Run AI Analysis**. The API receives only its existing approved allowlist for message generation; other fields remain in Python and the browser. Use this capability only for data whose external processing is authorized. / 演示站不设访问控制。任何访问者都可上传符合 Schema 的文件并点击 **Run AI Analysis**。API 仅接收既有的文案生成允许字段；其余字段保留在 Python 和浏览器中。仅可对已获外部处理授权的数据使用此功能。
 - Analysis is performed within one request. If it fails, submit again; no partial result is retained. A completed response stays in browser memory until refresh/close and can be downloaded as `offers.csv`. / 分析在单次请求中完成。失败时重新提交；服务端不保留部分结果。完成响应只留在浏览器内存，刷新或关闭页面即清除，可下载为 `offers.csv`。
 - The message validator is a lightweight automated check, not factual verification. Every message needs human review. / Message 校验仅为轻量自动检查，不构成事实核验；每条文案都需要人工审核。
 

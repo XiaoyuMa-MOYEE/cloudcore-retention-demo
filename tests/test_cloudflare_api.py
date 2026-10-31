@@ -4,7 +4,6 @@ import io
 import json
 from pathlib import Path
 
-import pytest
 import yaml
 
 from backend.cloudflare_app import analyze_content
@@ -34,9 +33,11 @@ def run_inline(coroutine):
 class MockResponsesProvider:
     def __init__(self):
         self.calls = 0
+        self.payloads = []
 
     async def generate(self, payload, system_prompt, model, **kwargs):
         self.calls += 1
+        self.payloads.append(payload)
         descriptions = {
             "O1": "We are offering a free upgrade to Standard support for 3 months.",
             "O2": "We are offering 15% off the monthly fee for 3 months.",
@@ -68,21 +69,22 @@ def test_demo_is_processed_in_memory_in_batches_and_exports_exact_seven_columns(
     assert all(len(row["message"].split()) <= 80 for row in exported)
 
 
-def test_real_customer_identifiers_are_not_sent_to_external_model():
+def test_uploaded_customer_data_is_analyzed_without_sending_customer_identifiers():
     content = DEMO.read_bytes().replace(b"SIM001", b"CUS001", 1)
     provider = MockResponsesProvider()
-    with pytest.raises(Exception) as rejected:
-        run_inline(analyze_content(content, CONFIG, "mock-key", provider, bundled=DEMO.read_bytes()))
-    assert getattr(rejected.value, "status_code", None) == 403
-    assert provider.calls == 0
+    result = run_inline(analyze_content(content, CONFIG, "mock-key", provider, bundled=DEMO.read_bytes()))
+    assert result["status"] == "completed"
+    assert result["synthetic_data"] is False
+    assert provider.calls == 3
+    sent_customers = [customer for payload in provider.payloads for customer in payload["customers"]]
+    assert all(set(customer) == {"id", "industry", "products", "tenure_months", "support_tier", "selected_offer"}
+               for customer in sent_customers)
+    assert "CUS001" not in json.dumps(provider.payloads)
 
 
-def test_uploaded_synthetic_csv_requires_server_setting_unless_exact_demo(monkeypatch):
+def test_uploaded_csv_analysis_does_not_depend_on_synthetic_upload_flag(monkeypatch):
     content = DEMO.read_bytes().replace(b"SIM001", b"SIM901", 1)
     provider = MockResponsesProvider()
-    with pytest.raises(Exception) as rejected:
-        run_inline(analyze_content(content, CONFIG, "mock-key", provider, bundled=DEMO.read_bytes()))
-    assert getattr(rejected.value, "status_code", None) == 403
-    monkeypatch.setenv("ALLOW_UPLOADED_SYNTHETIC_ANALYSIS", "true")
+    monkeypatch.delenv("ALLOW_UPLOADED_SYNTHETIC_ANALYSIS", raising=False)
     result = run_inline(analyze_content(content, CONFIG, "mock-key", provider, bundled=DEMO.read_bytes()))
     assert result["succeeded"] == 45
