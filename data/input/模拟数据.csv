@@ -4,24 +4,24 @@ SIM002,Retail,NSW,20,Cloud Storage,4200,Basic,0.71
 SIM003,Healthcare,VIC,12,Managed Network,2000,Basic,0.53
 SIM004,Education,QLD,45,Cloud Hosting + Storage,12000,Basic,0.38
 SIM005,Hospitality,WA,18,Cloud Hosting,1999,Standard,0.79
-SIM006,Manufacturing,SA,24,Backup + Managed Network,850,Enterprise,0.62
+SIM006,Manufacturing,SA,24,Backup + Managed Network,850,Premium,0.62
 SIM007,Finance,NSW,12,Cloud Storage,1999.99,Standard,0.49
 SIM008,Logistics,VIC,6,Cloud Hosting,2000,Standard,0.75
 SIM009,Professional Services,WA,11,Backup + Storage,10000,Enterprise,0.56
 SIM010,Construction,QLD,1,Managed Network,3500,Standard,0.44
-SIM011,Technology,NSW,12,Cloud Hosting + Backup,2000,Enterprise,0.89
+SIM011,Technology,NSW,12,Cloud Hosting + Backup,2000,Premium,0.89
 SIM012,Retail,VIC,36,Cloud Storage,10000,Standard,0.67
 SIM013,Education,WA,60,Cloud Hosting + Managed Network,15000,Enterprise,0.31
 SIM014,Energy,NT,13,Storage + Backup,8500,Standard,0.30
 SIM015,Media,SA,9,Cloud Hosting,1999,Basic,0.93
-SIM016,Nonprofit,TAS,0,Backup,2000,Enterprise,0.35
+SIM016,Nonprofit,TAS,0,Backup,2000,Premium,0.35
 SIM017,Retail,QLD,12,Cloud Hosting + Backup,0,Basic,0.51
 SIM018,Hospitality,SA,12,Cloud Storage,500,Standard,0.86
 SIM019,Logistics,TAS,4,Backup + Storage,2000,Enterprise,0.89
 SIM020,Technology,NT,60,Cloud Hosting,8000,Standard,0.65
 SIM021,Education,WA,0,Managed Network,1200,Basic,0.43
 SIM022,Finance,NSW,12,Cloud Hosting + Backup,500,Standard,0.80
-SIM023,Construction,VIC,11,Cloud Storage,5000,Enterprise,0.71
+SIM023,Construction,VIC,11,Cloud Storage,5000,Premium,0.71
 SIM024,Healthcare,QLD,24,Backup + Storage,8000,Standard,0.75
 SIM025,Manufacturing,SA,12,Cloud Hosting,0,Basic,0.95
 SIM026,Energy,TAS,40,Managed Network,0,Standard,0.52
@@ -29,7 +29,7 @@ SIM027,Retail,NT,4,Cloud Hosting + Backup,10000,Enterprise,0.73
 SIM028,Hospitality,WA,60,Cloud Storage,8000,Standard,0.60
 SIM029,Logistics,NSW,48,Backup + Storage,1200,Basic,0.63
 SIM030,Technology,VIC,12,Cloud Hosting,500,Standard,0.59
-SIM031,Education,QLD,0,Managed Network,2000,Enterprise,0.32
+SIM031,Education,QLD,0,Managed Network,2000,Premium,0.32
 SIM032,Finance,SA,12,Cloud Hosting + Backup,2000,Standard,0.31
 SIM033,Construction,TAS,48,Cloud Storage,1200,Basic,0.93
 SIM034,Healthcare,NT,40,Backup + Storage,500,Standard,0.60
@@ -37,7 +37,7 @@ SIM035,Manufacturing,WA,11,Cloud Hosting,2000,Enterprise,0.91
 SIM036,Energy,NSW,12,Managed Network,15000,Standard,0.67
 SIM037,Retail,VIC,0,Cloud Hosting + Backup,1200,Basic,0.34
 SIM038,Hospitality,QLD,40,Cloud Storage,1999.99,Standard,0.53
-SIM039,Logistics,SA,0,Backup + Storage,2000,Enterprise,0.79
+SIM039,Logistics,SA,0,Backup + Storage,2000,Premium,0.79
 SIM040,Technology,TAS,12,Cloud Hosting,8000,Standard,0.32
 SIM041,Education,NT,12,Managed Network,10000,Basic,0.43
 SIM042,Finance,WA,6,Cloud Hosting + Backup,0,Standard,0.86

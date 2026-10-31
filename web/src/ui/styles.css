@@ -544,9 +544,13 @@ tbody tr:hover {
   color: #475f9b;
   background: #eef2fc;
 }
-.tier.enterprise {
+.tier.premium {
   color: #655096;
   background: #f4effb;
+}
+.tier.enterprise {
+  color: #246a63;
+  background: #eaf7f4;
 }
 .churn-score {
   font-weight: 600;

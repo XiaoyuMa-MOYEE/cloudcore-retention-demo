@@ -4,7 +4,7 @@ This is a public, short-term concept demo for a small project group. It runs as 
 
 The Worker reuses the existing Python input validation, O1–O4 Playbook, Offer/Reason, internal analysis, batching, prompt and Message validation. Azure creates Message only. Uploads are held in request memory; users download the returned seven-column `offers.csv` to keep it. / Worker 复用现有 Python 输入校验、O1–O4 Playbook、Offer/Reason、内部分析、分批、Prompt 和 Message 校验。Azure 仅生成 Message。上传文件只在请求期间处理；用户下载七列 `offers.csv` 自行保存。
 
-Valid support tiers are configured in `config.yaml`: `Basic`, `Standard`, and `Enterprise`. Only `Basic` triggers O1; `Standard` and `Enterprise` continue through the existing MRR and Tenure rules. / 有效支持等级在 `config.yaml` 中配置：`Basic`、`Standard`、`Enterprise`。只有 `Basic` 触发 O1；`Standard` 和 `Enterprise` 继续按现有 MRR 与 Tenure 规则判断。
+Valid support tiers are configured in `config.yaml`: `Basic`, `Standard`, `Premium`, and `Enterprise`. Only `Basic` triggers O1; the other tiers continue through the same MRR and Tenure rules. / `config.yaml` 配置四种有效支持等级：`Basic`、`Standard`、`Premium`、`Enterprise`。只有 `Basic` 触发 O1；其余等级均继续执行相同的 MRR 和 Tenure 规则。
 
 ## Local run / 本地运行
 

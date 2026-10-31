@@ -1,5 +1,7 @@
 # Support Tier Update — 2026-10-31
 
+> Superseded / 已被更正：Person 2 subsequently confirmed four valid tiers. See `2026-10-31-support-tier-correction.md`; `Premium` is valid, not unknown. / Person 2 后续确认四种有效等级，详见 `2026-10-31-support-tier-correction.md`；`Premium` 有效，不属于未知等级。
+
 ## English
 
 Person 2 confirmed the supported tiers are `Basic`, `Standard`, and `Enterprise`. Replaced active `Premium` values in `config.yaml`, the bundled synthetic customer CSV, test fixtures, Python tests, React tier styling, and README/architecture schema descriptions. Input validation still trims and case-folds for comparison while preserving the CSV source value. `Premium` is intentionally tested as an unknown tier and is not mapped to another value.
